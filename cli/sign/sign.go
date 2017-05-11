@@ -36,7 +36,7 @@ Flags:
 
 // Flags of 'cfssl sign'
 var signerFlags = []string{"hostname", "csr", "ca", "ca-key", "config", "profile", "label", "remote",
-	"mutual-tls-cert", "mutual-tls-key", "db-config"}
+	"mutual-tls-cert", "mutual-tls-key", "db-config", "pkcs11-config"}
 
 // SignerFromConfigAndDB takes the Config and creates the appropriate
 // signer.Signer object with a specified db
@@ -151,8 +151,8 @@ func signerMain(args []string, c cli.Config) (err error) {
 			return
 		}
 
-		if c.CAKeyFile == "" {
-			log.Error("need CA key (provide one with -ca-key)")
+		if c.PKCS11Config == "" && c.CAKeyFile == "" {
+			log.Error("need CA key (provide one with -ca-key or -pkcs11-config)")
 			return
 		}
 	}
