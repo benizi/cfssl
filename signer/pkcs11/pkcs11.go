@@ -1,5 +1,5 @@
 // +build pkcs11
-package universal
+package pkcs11
 
 import (
 	"crypto"
@@ -18,7 +18,7 @@ import (
 )
 
 func init() {
-	PrependLocalSignerToList(pkcs11Signer)
+	signer.Register("pkcs11Signer", pkcs11Signer)
 }
 
 type pkcs11Config struct {
@@ -34,9 +34,9 @@ func pkcs11Error(format string, params ...interface{}) error {
 	return cferr.Wrap(cferr.PrivateKeyError, cferr.ParseFailed, err)
 }
 
-func pkcs11Signer(root *Root, policy *config.Signing) (signer.Signer, bool, error) {
-	certFile := root.Config["cert-file"]
-	configFile := root.Config["pkcs11-config"]
+func pkcs11Signer(cfg map[string]string, policy *config.Signing) (signer.Signer, bool, error) {
+	certFile := cfg["cert-file"]
+	configFile := cfg["pkcs11-config"]
 
 	if configFile == "" {
 		return nil, false, nil
