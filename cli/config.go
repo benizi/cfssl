@@ -68,6 +68,7 @@ type Config struct {
 	AKI               string
 	DBConfigFile      string
 	CRLExpiration     time.Duration
+	PKCS11Config      string
 }
 
 // registerFlags defines all cfssl command flags and associates their values with variables.
@@ -127,6 +128,7 @@ func registerFlags(c *Config, f *flag.FlagSet) {
 	f.StringVar(&c.AKI, "aki", "", "certificate issuer (authority) key identifier")
 	f.StringVar(&c.DBConfigFile, "db-config", "", "certificate db configuration file")
 	f.DurationVar(&c.CRLExpiration, "expiry", 7*helpers.OneDay, "time from now after which the CRL will expire (default: one week)")
+	f.StringVar(&c.PKCS11Config, "pkcs11-config", "", "PKCS11 configuration file")
 	f.IntVar(&log.Level, "loglevel", log.LevelInfo, "Log level (0 = DEBUG, 5 = FATAL)")
 }
 
@@ -135,8 +137,9 @@ func registerFlags(c *Config, f *flag.FlagSet) {
 func RootFromConfig(c *Config) universal.Root {
 	return universal.Root{
 		Config: map[string]string{
-			"cert-file": c.CAFile,
-			"key-file":  c.CAKeyFile,
+			"cert-file":     c.CAFile,
+			"key-file":      c.CAKeyFile,
+			"pkcs11-config": c.PKCS11Config,
 		},
 		ForceRemote: c.Remote != "",
 	}

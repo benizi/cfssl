@@ -20,6 +20,7 @@ var gencertUsageText = `cfssl gencert -- generate a new key and signed certifica
 Usage of gencert:
     Generate a new key and cert from CSR:
         cfssl gencert -initca CSRJSON
+		// TODO - fix usage info
         cfssl gencert -ca cert -ca-key key [-config config] [-profile profile] [-hostname hostname] CSRJSON
         cfssl gencert -remote remote_host [-config config] [-profile profile] [-label label] [-hostname hostname] CSRJSON
 
@@ -35,7 +36,8 @@ Arguments:
 Flags:
 `
 
-var gencertFlags = []string{"initca", "remote", "ca", "ca-key", "config", "hostname", "profile", "label"}
+var gencertFlags = []string{"initca", "remote", "ca", "ca-key", "config", "hostname", "profile", "label",
+	"pkcs11-config"}
 
 func gencertMain(args []string, c cli.Config) error {
 	if c.RenewCA {
@@ -109,8 +111,8 @@ func gencertMain(args []string, c cli.Config) error {
 				return nil
 			}
 
-			if c.CAKeyFile == "" {
-				log.Error("need a CA key (provide one with -ca-key)")
+			if c.PKCS11Config == "" && c.CAKeyFile == "" {
+				log.Error("need a CA key (provide one with -ca-key or -pkcs11-config)")
 				return nil
 			}
 		}
