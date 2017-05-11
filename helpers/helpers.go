@@ -590,7 +590,11 @@ func ReadBytes(valFile string) ([]byte, error) {
 	case 2:
 		switch splitVal[0] {
 		case "env":
-			return []byte(os.Getenv(splitVal[1])), nil
+			val := os.Getenv(splitVal[1])
+			if val == "" {
+				return nil, fmt.Errorf("Empty ENV var: %s", splitVal[1])
+			}
+			return []byte(val), nil
 		case "file":
 			return ioutil.ReadFile(splitVal[1])
 		default:
