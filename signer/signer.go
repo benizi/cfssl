@@ -14,6 +14,7 @@ import (
 	"math/big"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cloudflare/cfssl/certdb"
@@ -56,6 +57,35 @@ type SignRequest struct {
 	Label       string      `json:"label"`
 	Serial      *big.Int    `json:"serial,omitempty"`
 	Extensions  []Extension `json:"extensions,omitempty"`
+}
+
+type SignerCheck func(cfg map[string]string, policy *config.Signing) (Signer, bool, error)
+
+var (
+	checkersMu sync.RWMutex
+	checkers   = make(map[string]SignerCheck)
+)
+
+func Register(name string, checker SignerCheck) {
+	checkersMu.Lock()
+	defer checkersMu.Unlock()
+	if checker == nil {
+		panic("signer: Register checker is nil")
+	}
+	if _, dup := checkers[name]; dup {
+		panic("signer: Register called twice for " + name)
+	}
+	checkers[name] = checker
+}
+
+func Checkers() map[string]SignerCheck {
+	checkersMu.RLock()
+	defer checkersMu.RUnlock()
+	ret := make(map[string]SignerCheck)
+	for name, checker := range checkers {
+		ret[name] = checker
+	}
+	return ret
 }
 
 // appendIf appends to a if s is not an empty string.

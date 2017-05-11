@@ -29,14 +29,10 @@ type Root struct {
 	ForceRemote bool
 }
 
-// a localSignerCheck looks at the Config keys in the Root, and
-// decides whether it has enough information to produce a signer.
-type localSignerCheck func(root *Root, policy *config.Signing) (signer.Signer, bool, error)
-
 // fileBackedSigner determines whether a file-backed local signer is supported.
-func fileBackedSigner(root *Root, policy *config.Signing) (signer.Signer, bool, error) {
-	keyFile := root.Config["key-file"]
-	certFile := root.Config["cert-file"]
+func fileBackedSigner(cfg map[string]string, policy *config.Signing) (signer.Signer, bool, error) {
+	keyFile := cfg["key-file"]
+	certFile := cfg["cert-file"]
 
 	if keyFile == "" {
 		return nil, false, nil
@@ -46,13 +42,8 @@ func fileBackedSigner(root *Root, policy *config.Signing) (signer.Signer, bool, 
 	return signer, true, err
 }
 
-var localSignerList = []localSignerCheck{
-	fileBackedSigner,
-}
-
-// PrependLocalSignerToList prepends signer to the local signer's list
-func PrependLocalSignerToList(signer localSignerCheck) {
-	localSignerList = append([]localSignerCheck{signer}, localSignerList...)
+func init() {
+	signer.Register("fileBackedSigner", fileBackedSigner)
 }
 
 func newLocalSigner(root Root, policy *config.Signing) (s signer.Signer, err error) {
@@ -70,8 +61,8 @@ func newLocalSigner(root Root, policy *config.Signing) (s signer.Signer, err err
 	// universal_signers_pkcs11.go contains a list
 	// of valid signers when PKCS #11 is turned
 	// on.
-	for _, possibleSigner := range localSignerList {
-		s, shouldProvide, err = possibleSigner(&root, policy)
+	for _, checker := range signer.Checkers() {
+		s, shouldProvide, err = checker(root.Config, policy)
 		if shouldProvide {
 			break
 		}
