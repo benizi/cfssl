@@ -217,6 +217,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/letsencrypt/pkcs11key",
+			"repository": "https://github.com/letsencrypt/pkcs11key",
+			"vcs": "git",
+			"revision": "c0cda66cd68d4d85fbc9e0287545271c6e32f72d",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/lib/pq",
 			"repository": "https://github.com/lib/pq",
 			"vcs": "",
@@ -229,6 +237,14 @@
 			"vcs": "",
 			"revision": "c5aee9649735e8dadac55eb968ccebd9fa29a881",
 			"branch": "master"
+		},
+		{
+			"importpath": "github.com/miekg/pkcs11",
+			"repository": "https://github.com/miekg/pkcs11",
+			"vcs": "git",
+			"revision": "7283ca79f35edb89bc1b4ecae7f86a3680ce737f",
+			"branch": "master",
+			"notests": true
 		},
 		{
 			"importpath": "github.com/mitchellh/gox",
