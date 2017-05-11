@@ -406,6 +406,12 @@ Then building with `go build` will use the embedded resources.
 
 ### Using a PKCS#11 hardware token / HSM
 
+TODO: document using a YubiKey with this branch.
+
+TODO: the rest of this PKCS#11 documentation seems inordinately complex.
+
+(The documentation here no longer applied to the current codebase, since PKCS#11
+support was pulled out into a different repo.)
 For better security, you may wish to store your private key in an HSM or
 smartcard. The interface to both of these categories of device is described by
 the PKCS#11 spec. If you need to do approximately one signing operation per
