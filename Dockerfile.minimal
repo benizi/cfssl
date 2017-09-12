@@ -14,6 +14,7 @@ RUN buildDeps=' \
 		libtool \
 		libgcc \
 	' \
+	runDeps=libltdl \
 	set -x && \
 	apk update && \
 	apk add $buildDeps && \
@@ -25,6 +26,7 @@ RUN buildDeps=' \
 	go build -o /usr/bin/mkbundle ./cmd/mkbundle && \
 	go build -o /usr/bin/multirootca ./cmd/multirootca && \
 	apk del $buildDeps && \
+	apk add $runDeps && \
 	rm -rf /var/cache/apk/* && \
 	rm -rf /go && \
 	echo "Build complete."
