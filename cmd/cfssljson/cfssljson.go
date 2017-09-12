@@ -55,7 +55,7 @@ type nameformat struct {
 
 func main() {
 	nameformats := map[string]nameformat{
-		"": {
+		"default": {
 			"%s.pem",
 			"%s-key.pem",
 			"%s-key.enc",
@@ -75,6 +75,9 @@ func main() {
 		},
 	}
 	defaultNames := os.Getenv("cfssl_names")
+	if defaultNames == "" {
+		defaultNames = "default"
+	}
 
 	bare := flag.Bool("bare", false, "the response from CFSSL is not wrapped in the API standard response")
 	inFile := flag.String("f", "-", "JSON input")
@@ -93,9 +96,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Invalid name format: %s\n", *nameformat)
 		valid := []string{}
 		for k, _ := range nameformats {
-			if k != "" {
-				valid = append(valid, k)
-			}
+			valid = append(valid, k)
 		}
 		fmt.Fprintf(os.Stderr, "Valid formats are: %v\n", valid)
 		os.Exit(1)
