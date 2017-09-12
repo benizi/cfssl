@@ -49,16 +49,56 @@ type outputFile struct {
 	Perms    os.FileMode
 }
 
+type nameformat struct {
+	cert, key, enc, csr, bundle, root, ocsp string
+}
+
 func main() {
+	nameformats := map[string]nameformat{
+		"": {
+			"%s.pem",
+			"%s-key.pem",
+			"%s-key.enc",
+			"%s.csr",
+			"%s-bundle.pem",
+			"%s-root.pem",
+			"%s-response.der",
+		},
+		"benizi": {
+			"%s.cert",
+			"%s.key",
+			"%s.key.encrypted",
+			"%s.csr",
+			"%s.bundle",
+			"%s.root",
+			"%s.response",
+		},
+	}
+	defaultNames := os.Getenv("cfssl_names")
+
 	bare := flag.Bool("bare", false, "the response from CFSSL is not wrapped in the API standard response")
 	inFile := flag.String("f", "-", "JSON input")
 	output := flag.Bool("stdout", false, "output the response instead of saving to a file")
+	nameformat := flag.String("names", defaultNames, "Name style to use")
 	printVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
 	if *printVersion {
 		fmt.Printf("%s", version.FormatVersion())
 		return
+	}
+
+	names, exists := nameformats[*nameformat]
+	if !exists {
+		fmt.Fprintf(os.Stderr, "Invalid name format: %s\n", *nameformat)
+		valid := []string{}
+		for k, _ := range nameformats {
+			if k != "" {
+				valid = append(valid, k)
+			}
+		}
+		fmt.Fprintf(os.Stderr, "Valid formats are: %v\n", valid)
+		os.Exit(1)
 	}
 
 	var baseName string
@@ -112,7 +152,7 @@ func main() {
 	}
 	if cert != "" {
 		outs = append(outs, outputFile{
-			Filename: baseName + ".pem",
+			Filename: fmt.Sprintf(names.cert, baseName),
 			Contents: cert,
 			Perms:    0664,
 		})
@@ -125,7 +165,7 @@ func main() {
 	}
 	if key != "" {
 		outs = append(outs, outputFile{
-			Filename: baseName + "-key.pem",
+			Filename: fmt.Sprintf(names.key, baseName),
 			Contents: key,
 			Perms:    0600,
 		})
@@ -134,7 +174,7 @@ func main() {
 	if contents, ok := input["encrypted_key"]; ok {
 		encKey := contents.(string)
 		outs = append(outs, outputFile{
-			Filename: baseName + "-key.enc",
+			Filename: fmt.Sprintf(names.enc, baseName),
 			Contents: encKey,
 			IsBinary: true,
 			Perms:    0600,
@@ -148,7 +188,7 @@ func main() {
 	}
 	if csr != "" {
 		outs = append(outs, outputFile{
-			Filename: baseName + ".csr",
+			Filename: fmt.Sprintf(names.csr, baseName),
 			Contents: csr,
 			Perms:    0644,
 		})
@@ -158,12 +198,12 @@ func main() {
 		if certificateBundle, ok := contents["bundle"].(string); ok {
 			if rootCertificate, ok := contents["root"].(string); ok {
 				outs = append(outs, outputFile{
-					Filename: baseName + "-bundle.pem",
+					Filename: fmt.Sprintf(names.bundle, baseName),
 					Contents: certificateBundle + "\n" + rootCertificate,
 					Perms:    0644,
 				})
 				outs = append(outs, outputFile{
-					Filename: baseName + "-root.pem",
+					Filename: fmt.Sprintf(names.root, baseName),
 					Contents: rootCertificate,
 					Perms:    0644,
 				})
@@ -185,7 +225,7 @@ func main() {
 			os.Exit(1)
 		}
 		outs = append(outs, outputFile{
-			Filename: baseName + "-response.der",
+			Filename: fmt.Sprintf(names.ocsp, baseName),
 			Contents: string(resp),
 			IsBinary: true,
 			Perms:    0644,
