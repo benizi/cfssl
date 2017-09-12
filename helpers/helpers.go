@@ -185,6 +185,80 @@ func HashAlgoString(alg x509.SignatureAlgorithm) string {
 	}
 }
 
+// KeyUsageStrings returns text representations of the bits that are set in the
+// certificate's x509 KeyUsage.
+func KeyUsageStrings(usage x509.KeyUsage) []string {
+	var usages []string
+	if usage&x509.KeyUsageDigitalSignature == x509.KeyUsageDigitalSignature {
+		usages = append(usages, "DigitalSignature")
+	}
+	if usage&x509.KeyUsageContentCommitment == x509.KeyUsageContentCommitment {
+		usages = append(usages, "ContentCommitment")
+	}
+	if usage&x509.KeyUsageKeyEncipherment == x509.KeyUsageKeyEncipherment {
+		usages = append(usages, "KeyEncipherment")
+	}
+	if usage&x509.KeyUsageDataEncipherment == x509.KeyUsageDataEncipherment {
+		usages = append(usages, "DataEncipherment")
+	}
+	if usage&x509.KeyUsageKeyAgreement == x509.KeyUsageKeyAgreement {
+		usages = append(usages, "KeyAgreement")
+	}
+	if usage&x509.KeyUsageCertSign == x509.KeyUsageCertSign {
+		usages = append(usages, "CertSign")
+	}
+	if usage&x509.KeyUsageCRLSign == x509.KeyUsageCRLSign {
+		usages = append(usages, "CRLSign")
+	}
+	if usage&x509.KeyUsageEncipherOnly == x509.KeyUsageEncipherOnly {
+		usages = append(usages, "EncipherOnly")
+	}
+	if usage&x509.KeyUsageDecipherOnly == x509.KeyUsageDecipherOnly {
+		usages = append(usages, "DecipherOnly")
+	}
+	return usages
+}
+
+func extKeyUsageString(ext x509.ExtKeyUsage) string {
+	switch ext {
+	case x509.ExtKeyUsageAny:
+		return "Any"
+	case x509.ExtKeyUsageServerAuth:
+		return "ServerAuth"
+	case x509.ExtKeyUsageClientAuth:
+		return "ClientAuth"
+	case x509.ExtKeyUsageCodeSigning:
+		return "CodeSigning"
+	case x509.ExtKeyUsageEmailProtection:
+		return "EmailProtection"
+	case x509.ExtKeyUsageIPSECEndSystem:
+		return "IPSECEndSystem"
+	case x509.ExtKeyUsageIPSECTunnel:
+		return "IPSECTunnel"
+	case x509.ExtKeyUsageIPSECUser:
+		return "IPSECUser"
+	case x509.ExtKeyUsageTimeStamping:
+		return "TimeStamping"
+	case x509.ExtKeyUsageOCSPSigning:
+		return "OCSPSigning"
+	case x509.ExtKeyUsageMicrosoftServerGatedCrypto:
+		return "MicrosoftServerGatedCrypto"
+	case x509.ExtKeyUsageNetscapeServerGatedCrypto:
+		return "NetscapeServerGatedCrypto"
+	}
+	return "UNKNOWN"
+}
+
+// ExtKeyUsageStrings returns text representations of the extended key usage
+// bits that are set in the certificate.
+func ExtKeyUsageStrings(extUsage []x509.ExtKeyUsage) []string {
+	usages := make([]string, len(extUsage))
+	for i, ext := range extUsage {
+		usages[i] = extKeyUsageString(ext)
+	}
+	return usages
+}
+
 // EncodeCertificatesPEM encodes a number of x509 certficates to PEM
 func EncodeCertificatesPEM(certs []*x509.Certificate) []byte {
 	var buffer bytes.Buffer

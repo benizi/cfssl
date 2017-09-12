@@ -25,6 +25,9 @@ type Certificate struct {
 	SignatureAlgorithm string    `json:"sigalg"`
 	AKI                string    `json:"authority_key_id"`
 	SKI                string    `json:"subject_key_id"`
+	KeyUsage           []string  `json:"key_usage,omitempty"`
+	ExtKeyUsage        []string  `json:"ext_key_usage,omitempty"`
+	IsCA               bool      `json:"is_ca"`
 	RawPEM             string    `json:"pem"`
 }
 
@@ -95,6 +98,9 @@ func ParseCertificate(cert *x509.Certificate) *Certificate {
 		AKI:                formatKeyID(cert.AuthorityKeyId),
 		SKI:                formatKeyID(cert.SubjectKeyId),
 		SerialNumber:       cert.SerialNumber.String(),
+		KeyUsage:           helpers.KeyUsageStrings(cert.KeyUsage),
+		ExtKeyUsage:        helpers.ExtKeyUsageStrings(cert.ExtKeyUsage),
+		IsCA:               cert.BasicConstraintsValid && cert.IsCA,
 	}
 	for _, ip := range cert.IPAddresses {
 		c.SANs = append(c.SANs, ip.String())
