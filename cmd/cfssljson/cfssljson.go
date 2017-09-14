@@ -49,29 +49,59 @@ type outputFile struct {
 	Perms    os.FileMode
 }
 
-type nameformat struct {
-	cert, key, enc, csr, bundle, root, ocsp string
+type filekind int
+
+const (
+	kind_cert filekind = iota
+	kind_key
+	kind_enc
+	kind_csr
+	kind_bundle
+	kind_root
+	kind_ocsp
+)
+
+type nameformat map[filekind]string
+
+type namer struct {
+	names    nameformat
+	baseName string
+}
+
+func newNamer(names nameformat, baseName string) *namer {
+	return &namer{
+		names:    names,
+		baseName: baseName,
+	}
+}
+
+func (n *namer) Filename(kind filekind) string {
+	format, ok := n.names[kind]
+	if !ok {
+		panic("missing filekind")
+	}
+	return fmt.Sprintf(format, n.baseName)
 }
 
 func main() {
 	nameformats := map[string]nameformat{
 		"default": {
-			"%s.pem",
-			"%s-key.pem",
-			"%s-key.enc",
-			"%s.csr",
-			"%s-bundle.pem",
-			"%s-root.pem",
-			"%s-response.der",
+			kind_cert:   "%s.pem",
+			kind_key:    "%s-key.pem",
+			kind_enc:    "%s-key.enc",
+			kind_csr:    "%s.csr",
+			kind_bundle: "%s-bundle.pem",
+			kind_root:   "%s-root.pem",
+			kind_ocsp:   "%s-response.der",
 		},
 		"benizi": {
-			"%s.cert",
-			"%s.key",
-			"%s.key.encrypted",
-			"%s.csr",
-			"%s.bundle",
-			"%s.root",
-			"%s.response",
+			kind_cert:   "%s.cert",
+			kind_key:    "%s.key",
+			kind_enc:    "%s.key.encrypted",
+			kind_csr:    "%s.csr",
+			kind_bundle: "%s.bundle",
+			kind_root:   "%s.root",
+			kind_ocsp:   "%s.response",
 		},
 	}
 	defaultNames := os.Getenv("cfssl_names")
@@ -108,6 +138,8 @@ func main() {
 	} else {
 		baseName = flag.Arg(0)
 	}
+
+	namer := newNamer(names, baseName)
 
 	var input = map[string]interface{}{}
 	var outs []outputFile
@@ -153,7 +185,7 @@ func main() {
 	}
 	if cert != "" {
 		outs = append(outs, outputFile{
-			Filename: fmt.Sprintf(names.cert, baseName),
+			Filename: namer.Filename(kind_cert),
 			Contents: cert,
 			Perms:    0664,
 		})
@@ -166,7 +198,7 @@ func main() {
 	}
 	if key != "" {
 		outs = append(outs, outputFile{
-			Filename: fmt.Sprintf(names.key, baseName),
+			Filename: namer.Filename(kind_key),
 			Contents: key,
 			Perms:    0600,
 		})
@@ -175,7 +207,7 @@ func main() {
 	if contents, ok := input["encrypted_key"]; ok {
 		encKey := contents.(string)
 		outs = append(outs, outputFile{
-			Filename: fmt.Sprintf(names.enc, baseName),
+			Filename: namer.Filename(kind_enc),
 			Contents: encKey,
 			IsBinary: true,
 			Perms:    0600,
@@ -189,7 +221,7 @@ func main() {
 	}
 	if csr != "" {
 		outs = append(outs, outputFile{
-			Filename: fmt.Sprintf(names.csr, baseName),
+			Filename: namer.Filename(kind_csr),
 			Contents: csr,
 			Perms:    0644,
 		})
@@ -199,12 +231,12 @@ func main() {
 		if certificateBundle, ok := contents["bundle"].(string); ok {
 			if rootCertificate, ok := contents["root"].(string); ok {
 				outs = append(outs, outputFile{
-					Filename: fmt.Sprintf(names.bundle, baseName),
+					Filename: namer.Filename(kind_bundle),
 					Contents: certificateBundle + "\n" + rootCertificate,
 					Perms:    0644,
 				})
 				outs = append(outs, outputFile{
-					Filename: fmt.Sprintf(names.root, baseName),
+					Filename: namer.Filename(kind_root),
 					Contents: rootCertificate,
 					Perms:    0644,
 				})
@@ -226,7 +258,7 @@ func main() {
 			os.Exit(1)
 		}
 		outs = append(outs, outputFile{
-			Filename: fmt.Sprintf(names.ocsp, baseName),
+			Filename: namer.Filename(kind_ocsp),
 			Contents: string(resp),
 			IsBinary: true,
 			Perms:    0644,
